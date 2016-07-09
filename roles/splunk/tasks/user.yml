@@ -1,0 +1,15 @@
+---
+- name: Add splunk home dir
+  file: path=/home/splunk state=directory owner=splunk group=splunk mode=0700
+  become: True
+
+- name: Check splunk user
+  lineinfile: dest=/etc/passwd state=present regexp="^splunk:" 
+              line="splunk:x:2000:2000:splunk user:/home/splunk:/bin/bash"
+  become: True
+
+- name: Add splunk user profile
+  copy: src=home/splunk/.bash_profile dest=/home/splunk/.bash_profile 
+        owner=splunk group=splunk mode=0600
+
+

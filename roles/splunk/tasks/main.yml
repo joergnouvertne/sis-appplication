@@ -1,0 +1,6 @@
+---
+# tasks file for splunk/
+- include: user.yml
+- include: remove_uf.yml
+- include: install_splunk.yml
+

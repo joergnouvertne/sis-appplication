@@ -1,0 +1,7 @@
+---
+- name: install sis application
+  hosts: sisapp
+  user: splunk
+
+  roles:
+    - splunk

@@ -1,0 +1,53 @@
+---
+
+- name: Verify /opt/splunk
+  file: path=/opt/splunk state=directory owner=splunk group=splunk mode=0755
+  become: True
+
+- name: Remove ftr
+  file: path=/opt/splunk/ftr state=absent
+  register: splunk_ftr
+
+- debug:  msg="splunk was not started after installation"
+  when: splunk_ftr.changed == true
+
+- name: check if splunk is running
+  command: /opt/splunk/bin/splunk status 
+  register: splunk_status
+  ignore_errors: true
+  failed_when: splunk_status.stderr != ""
+  changed_when: false
+
+- name: check if splunk is up-2-date
+  command: /opt/splunk/bin/splunk version 
+  register: splunk_version
+  ignore_errors: true
+  failed_when: splunk_status.stderr != ""
+  changed_when: false
+
+- debug: msg="{{splunk_version.stdout_lines}}"
+
+- name: stop splunk if running and update required
+  command: /opt/splunk/bin/splunk stop
+  when:  (not ('Splunk 6.4.1 (build debde650d26e)' in splunk_version.stdout) or
+          splunk_ftr.changed == true) and 
+         not ('splunkd is not running.' in splunk_status.stdout)
+
+- name: Install splunk
+  unarchive: src=splunk-6.4.1-debde650d26e-Linux-x86_64.tgz
+             dest=/opt
+             owner=splunk
+             group=splunk
+             mode=0755
+  register: splunk_installation
+  when: not ('Splunk 6.4.1 (build debde650d26e)' in splunk_version.stdout) or
+        splunk_ftr.changed == true
+
+- name: Start splunk and accept license
+  command: /opt/splunk/bin/splunk start --accept-license --answer-yes --no-prompt
+  register: splunk_start
+  changed_when: not 'The splunk daemon (splunkd) is already running.' in splunk_start.stdout_lines
+
+- debug: var=splunk_start.stdout_lines
+
+

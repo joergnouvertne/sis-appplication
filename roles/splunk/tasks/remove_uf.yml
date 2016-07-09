@@ -1,0 +1,17 @@
+---
+
+- name: check for splunk> UF installation
+  stat: path=/opt/splunkforwarder/bin/splunk 
+  register: splunk_uf_bin
+
+- debug: msg="splunk> UF existsn"
+  when: splunk_uf_bin.stat.exists is defined and splunk_uf_bin.stat.exists == True
+
+- name: Shutdown splunk UF
+  command: /opt/splunkforwarder/bin/splunk stop
+  when: splunk_uf_bin.stat.exists is defined and splunk_uf_bin.stat.exists == True
+
+- name: remove splunk> UF package
+  zypper: name=splunkforwarder state=absent
+  when: splunk_uf_bin.stat.exists is defined and splunk_uf_bin.stat.exists == True
+  become: True
